@@ -10,9 +10,13 @@ class Room(models.Model):
 
 
 class Booking(models.Model):
+    objects = models.Manager()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     start_date = models.DateField()
     end_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20)
 
+    def __str__(self):
+        return f"{self.user.username} - {self.room.number}"

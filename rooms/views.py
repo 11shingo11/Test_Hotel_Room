@@ -1,7 +1,13 @@
 from rest_framework import generics, filters
 from .serializers import RoomSerializer, BookingSerializer
 from .models import Room, Booking
-
+from rest_framework import generics, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login
+from .serializers import UserSerializer
+from rest_framework.permissions import IsAuthenticated
 
 class RoomListCreateView(generics.ListCreateAPIView):
     queryset = Room.objects.all()
@@ -13,6 +19,7 @@ class RoomListAPIView(generics.ListAPIView):
     serializer_class = RoomSerializer
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['price_per_night', 'capacity']
+
 
 class AvailableRoomListAPIView(generics.ListAPIView):
     serializer_class = RoomSerializer
@@ -44,6 +51,33 @@ class BookingCreateView(generics.CreateAPIView):
     serializer_class = BookingSerializer
 
 
+class BookingListAPIView(generics.ListAPIView):
+    serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Booking.objects.filter(user=user)
+
+
 class BookingCancelView(generics.DestroyAPIView):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
+
+
+class UserRegistrationView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserLoginView(APIView):
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        user = authenticate(username=username, password=password)
+        if user:
+            login(request, user)
+            return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
