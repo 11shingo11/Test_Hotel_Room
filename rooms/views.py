@@ -1,23 +1,24 @@
-from rest_framework import generics, filters
-from .serializers import RoomSerializer, BookingSerializer
+from .serializers import RoomSerializer, BookingSerializer, UserSerializer
 from .models import Room, Booking
-from rest_framework import generics, status
+from rest_framework import generics, status, filters
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login
-from .serializers import UserSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from .filters import AvailabilityFilter
+
 
 class RoomListCreateView(generics.ListCreateAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
+    permission_classes = [IsAdminUser]
 
 
 class RoomListAPIView(generics.ListAPIView):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
-    filter_backends = [filters.OrderingFilter]
+    filter_backends = [filters.OrderingFilter, AvailabilityFilter]
     ordering_fields = ['price_per_night', 'capacity']
 
 
@@ -49,6 +50,7 @@ class AvailableRoomListAPIView(generics.ListAPIView):
 class BookingCreateView(generics.CreateAPIView):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class BookingListAPIView(generics.ListAPIView):
